@@ -2,6 +2,7 @@
 
 using namespace std;
 
+// In ra biểu diễn nhị phân đầy đủ của x theo số bit của kiểu dữ liệu.
 void PrintBits(unsigned int x) {
     int i;
     for (i = 8 * sizeof(x)-1; i >= 0; i--) {
@@ -10,6 +11,7 @@ void PrintBits(unsigned int x) {
     printf("\n");
 }
 
+// In ra 8 bit thấp của x theo dạng nhị phân.
 void PrintBitsOfByte(unsigned int x) {
     int i;
     for (i = 7; i >= 0; i--) {
@@ -19,71 +21,73 @@ void PrintBitsOfByte(unsigned int x) {
 }
 
 int bitOr(int x, int y)
-{
+{ // Áp dụng công thức De Morgan: x | y = ~ (~x & ~y)
     return ~(~x & ~y);
 }
 
 int bitAnd(int x, int y)
-{
+{ // Áp dụng công thức De Morgan: x & y = ~ (~x | ~y)
     return ~(~x | ~y);
 }
 
 int negative(int x)
-{
+{ // Với số nguyên bù 2, ta có: -x = ~x + 1
     return (~x + 1);
 }
 
 int flipByte(int x, int n)
-{
-    return x ^ (((1 << 8) - 1) << (8 * n));
+{ // mask sẽ set full 1 ở vị trí byte cần flip, sau đó sẽ được XOR để flip bits
+    int mask = (0xff) << (n << 3);
+    return x ^ mask;
 }
 
+// Lấy n bit thấp của x bằng cách mask các bit bên ngoài phạm vi cần giữ lại.
 int getnbit(int x, int n)
-{
-    return x & ((1LL << n) - 1);
+{ 
+    return x & (~((~0) << n));
 }
 
-int divpw2(int x, int n)
-{
-    if (n < 0)
-    {
-        return x << (-n);
-    }
-    else
-    {
-        return x >> n;
-    }
+// Chia x cho 2^n nếu n >= 0, hoặc nhân x với 2^(-n) nếu n < 0, bằng cách sử dụng dịch bit.
+int divpw2(int x, int n) {
+    int mask = n >> 31;          // 0xFFFFFFFF nếu n < 0, 0x00000000 nếu n >= 0
+    int shl = (~n + 1) & mask;   // Lượng dịch trái: -n khi n < 0, 0 khi n >= 0
+    int shr = n & ~mask;         // Lượng dịch phải:  n khi n >= 0, 0 khi n < 0
+    
+    return (x << shl) >> shr;
 }
 
+// Kiểm tra xem x và y có phải là hai số đối nhau hay không bằng cách xét tổng của chúng.
 int isOpposite(int x, int y)
-{
-    if (x == negative(y)) return 1;
-    return 0;
+{ // Tính tổng 2 số, nếu 2 số đối kq = 0 -> Logical not trả về 1, còn lại trả về 0
+    return !(x + y);
 }
 
+// Kiểm tra x có chia hết cho 8 hay không bằng cách xét 3 bit thấp bằng 0.
 int is8x(int x)
 {
-    if ((x & ((1 << 3) - 1)) == 0) return 1;
-    return 0;
+    return !(x & 0x7);
 }
 
+// Kiểm tra xem x có phải là số dương theo cách biểu diễn số nguyên có dấu hay không.
 int isPositive(int x)
 {
-    if (!x) return 0;
-    if ((((x) >> 31) & 0x1) == 0) return 1;
-    return 0; 
+    return !(!x | ((x >> 31) & 0x1));
 }
 
+// Kiểm tra x có lớn hơn hoặc bằng 2^n hay không bằng cách dịch phải và xét giá trị còn lại.
 int isGE2n(int x, int n)
 {
-    if (x >= (1 << n)) return 1;
-    return 0;
+    return !!(x >> n);
 }
 
-int logicNot(int x)
-{
-    if (x) return 0;
-    return 1;
+// Thực hiện phép logicNot theo cách tính dựa trên bit dấu của x và -x.
+int logicNot(int x) {
+    // Với x != 0, ít nhất một trong hai số (x hoặc -x) sẽ có bit dấu (bit 31) bằng 1.
+    // Riêng x = 0 thì cả x và -x đều có bit dấu bằng 0.
+    int neg_x = ~x + 1;             // -x trong bù 2
+    int has_sign = (x | neg_x) >> 31; // 0 nếu x == 0, và -1 (0xFFFFFFFF) nếu x != 0
+    
+    return has_sign + 1;            // 0 + 1 = 1; (-1) + 1 = 0
 }
 
 void printTest(string_view s)
@@ -109,7 +113,7 @@ int main()
     {
         printTest("getnbit");
     }
-    if (divpw2(10, -1) == 20 && divpw2(15, -2) == 60 && divpw2(2, -4) == 32)
+    if (divpw2(10, 1) == 5 && divpw2(15, -2) == 60 && divpw2(2, -4) == 32)
     {
         printTest("divpw2");
     }
