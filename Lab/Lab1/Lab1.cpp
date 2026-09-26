@@ -35,6 +35,11 @@ int negative(int x)
     return (~x + 1);
 }
 
+int cal100(int x)
+{ // 100 biểu diễn nhị phân là: 1100100 = 2^6 + 2^5 + 2^2
+    return (x << 6) + (x << 5) + (x << 2);
+}
+
 int flipByte(int x, int n)
 { // mask sẽ set full 1 ở vị trí byte cần flip, sau đó sẽ được XOR để flip bits
     int mask = (0xff) << (n << 3);
