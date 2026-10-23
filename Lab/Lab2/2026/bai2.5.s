@@ -11,8 +11,13 @@
 		.ascii "Khong thuoc Doan TN\n"
 	Khongthuoc_len = . -Khongthuoc
 	
+	intuoi:
+		.ascii "Tuoi: "
+	intuoi_len = . -intuoi
+
 .section .bss
 	.lcomm tuoi, 5
+	.lcomm out, 1
 
 .section .text
 .globl _start
@@ -70,7 +75,7 @@ _start:
 	movl $Thuoc, %ecx
 	movl $Thuoc_len, %edx
 	int $0x80
-	jmp done
+	jmp nang_cao
 
 ngoai_khoang:
 	# Khong thuoc doan thanh nien
@@ -80,7 +85,52 @@ ngoai_khoang:
 	movl $Khongthuoc_len, %edx
 	int $0x80
 
+nang_cao:
+	movl $4, %eax
+	movl $1, %ebx
+	movl $intuoi, %ecx
+	movl $intuoi_len, %edx
+	int $0x80
+
+	call print
+
 done:
 	movl $1, %eax
 	xorl %ebx, %ebx
 	int  $0x80
+
+print:
+	# so trong %eax
+	movl %edi, %eax
+	# bien dem esi = 0
+	xorl %esi, %esi
+chia_loop:
+	# chia 10 lay so du
+    xorl %edx, %edx
+    movl $10, %ebx
+    divl %ebx
+
+	# push stack dem tiep
+    addb $'0', %dl
+    pushl %edx
+    incl %esi
+
+    cmpl $0, %eax
+    jne chia_loop
+
+in_loop:
+	# pop stack de output
+    popl %eax
+    movb %al, out
+
+    movl $4, %eax
+    movl $1, %ebx
+    movl $out, %ecx
+    movl $1, %edx
+    int $0x80
+
+    decl %esi
+    jnz in_loop
+	
+	ret
+	
