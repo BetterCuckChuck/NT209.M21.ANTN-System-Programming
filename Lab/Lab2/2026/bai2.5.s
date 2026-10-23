@@ -15,6 +15,9 @@
 		.ascii "Tuoi: "
 	intuoi_len = . -intuoi
 
+	newline:
+		.ascii "\n"
+
 .section .bss
 	.lcomm tuoi, 5
 	.lcomm out, 1
@@ -131,6 +134,13 @@ in_loop:
 
     decl %esi
     jnz in_loop
+
+    # in dau xuong dong
+    movl $4, %eax
+    movl $1, %ebx
+    movl $newline, %ecx
+    movl $1, %edx
+    int $0x80
 	
 	ret
 	

@@ -2,6 +2,8 @@
 	hihi:
 	.string "Nhap so: "
 string_len = . -hihi
+	newline:
+	.ascii "\n"
 .section .bss
 	.lcomm x, 3
 	.lcomm y, 3
@@ -89,6 +91,13 @@ _start:
         movl %esp, %ecx
         movl $1, %edx
         int $0x80
+
+	# in dau xuong dong
+	movl $4, %eax
+	movl $1, %ebx
+	movl $newline, %ecx
+	movl $1, %edx
+	int $0x80
 
 	# return 0 and exit
 	movl $1, %eax
