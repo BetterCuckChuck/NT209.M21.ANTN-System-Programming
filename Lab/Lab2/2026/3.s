@@ -9,7 +9,7 @@ shift_string_len = .-shift_string
 
 .section .bss
     .lcomm input_str, 256
-    .lcomm input_len, 1
+    .lcomm input_len, 4
     .lcomm n, 2
 
 .section .text
@@ -30,15 +30,15 @@ read:
 	ret
 
 cipher:
-    movb $0, %cl
+    movl $0, %ecx
     movl $input_str, %edx
     decl %edx
 
 .cipher_loop:
-    cmpb input_len, %cl
+    cmpl input_len, %ecx
     je .fin
     incl %edx
-    incb %cl
+    incl %ecx
     cmpb $'A', (%edx)
     jb .cipher_loop     # ki tu dac biet ngoai khoang
     cmpb $'Z', (%edx)
@@ -77,9 +77,9 @@ _start:
 	call printf
 
 	movl $input_str, %ecx
-    movl $255, %edx
+    movl $256, %edx
     call read
-    movb %al, input_len
+    movl %eax, input_len
 
     movl $shift_string, %ecx
 	movl $shift_string_len, %edx
@@ -92,7 +92,7 @@ _start:
     call cipher
 
     movl $input_str, %ecx
-	movzbl input_len, %edx
+	movl input_len, %edx
 	call printf
     
     movl $1, %eax
