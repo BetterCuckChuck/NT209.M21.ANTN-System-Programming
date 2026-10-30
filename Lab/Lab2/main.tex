@@ -144,14 +144,10 @@
 \section{Chi tiết các bài tập và giải thích mã nguồn}
 
 % ==================== BÀI 2.1 ====================
-\subsection{Bài 2.1: In ra độ dài của chuỗi cho trước (tối đa 9 ký tự)}
+\subsection{Bài 2.1}
 
-\textbf{Yêu cầu đề bài:}
-Cho trước một chuỗi ký tự \texttt{msg} được định nghĩa trong \texttt{.section .data} (độ dài tối đa 9 ký tự). Hãy viết chương trình hợp ngữ tính độ dài chuỗi (không tính ký tự null kết thúc chuỗi \texttt{\textbackslash 0}) và in giá trị này ra màn hình kèm ký tự xuống dòng.
-
-\textbf{Giải thích mã nguồn:}
-Chương trình xác định trước độ dài chuỗi cố định \texttt{msg} ngay ở giai đoạn hợp dịch thông qua biểu thức \texttt{msg\_len = . - msg - 1}, lấy vị trí hiện tại trừ địa chỉ đầu chuỗi và trừ bỏ 1 byte null \texttt{\textbackslash 0}. Giá trị số này được cộng với \texttt{0x30} để chuyển đổi trực tiếp sang ký tự chữ số ASCII rồi lưu sẵn cùng mã xuống dòng \texttt{0x0a} trong vùng nhớ \texttt{output}. Khi khởi chạy, chương trình chỉ cần nạp địa chỉ buffer vào \texttt{\%ecx}, độ dài 2 bytes vào \texttt{\%edx} và gọi \texttt{sys\_write} (\texttt{\%eax = 4}) ra \texttt{stdout} (\texttt{\%ebx = 1}) qua ngắt \texttt{int \$0x80}, sau đó thoát tiến trình an toàn bằng \texttt{sys\_exit}.
-
+\textbf{Giải thích:}
+Ta tính độ dài chuỗi \texttt{msg}, lưu ở biến \texttt{msg\_len}. Cộng thêm \texttt{0x80} để chuyển sang ASCII. Khi khởi chạy, chương trình chỉ cần nạp đúng địa chỉ buffer và output chuỗi.
 
 \textbf{Mã nguồn chương trình (\texttt{bai2.1.s}):}
 \begin{lstlisting}
@@ -178,14 +174,10 @@ _start:
 \end{lstlisting}
 
 % ==================== BÀI 2.2 ====================
-\subsection{Bài 2.2: Tính số dư của tổng 4 số có 2 chữ số khi chia 8}
+\subsection{Bài 2.2}
 
-\textbf{Yêu cầu đề bài:}
-Nhập lần lượt 4 số nguyên có 2 chữ số ($10 \le x \le 99$) từ bàn phím. Tính tổng 4 số đã nhập và in ra màn hình số dư của tổng khi chia cho 8.
-
-\textbf{Giải thích mã nguồn:}
-Chương trình tách tác vụ nhập liệu thành thủ tục con \texttt{nhapso} và gọi 4 lần liên tiếp để nhận lần lượt 4 số từ người dùng qua \texttt{sys\_read}. Mỗi số đọc được gồm 2 ký tự số được chuyển đổi về giá trị nguyên bằng cách trừ 48, lấy chữ số đầu nhân 10 rồi cộng với chữ số sau trước khi cộng dồn vào biến \texttt{ans}. Sau khi hoàn tất nhập liệu, thủ tục \texttt{inkq} xóa thanh ghi \texttt{\%edx}, nạp tổng vào \texttt{\%eax} và thực hiện phép chia không dấu 64-bit cho 8 bằng lệnh \texttt{divl \%ecx}. Phần dư nằm trong \texttt{\%edx} được cộng thêm 48 thành mã ASCII và in ra màn hình cùng chuỗi thông báo qua \texttt{sys\_write}.
-
+\textbf{Giải thích:}
+Nhập lần lượt 4 số. Với mỗi số, ta nhận kí tự hàng chục, chuyển sang số nguyên, nhân 10; nhận kí tự hàng đơn vị, chuyển sang số nguyên; lưu tổng lại ta được số tương ứng. Sau đó, ta cộng 4 số đã được nhập vào rồi tiến hành nạp tham số vào các thanh ghi để chia cho 8 lấy số dư, chuyển kết quả sang mã ASCII rồi in ra màn hình.
 
 \textbf{Mã nguồn chương trình (\texttt{bai2\_2.s}):}
 \begin{lstlisting}
@@ -271,17 +263,10 @@ _start:
 \end{lstlisting}
 
 % ==================== BÀI 2.3 ====================
-\subsection{Bài 2.3: Mã hóa Caesar trên một chuỗi ký tự (Cơ bản + Nâng cao 1 \& 2)}
+\subsection{Bài 2.3}
 
-\textbf{Yêu cầu đề bài:}
-\begin{itemize}
-    \item \textbf{Cơ bản:} Nhập một chuỗi ký tự và số bước dịch $n$ ($0 \le n \le 9$), xuất ra chuỗi đã được mã hóa Caesar tương ứng.
-    \item \textbf{Nâng cao 1:} Xử lý xoay vòng chuẩn khi ký tự sau khi dịch vượt quá \texttt{'z'} hoặc \texttt{'Z'} (ví dụ: với $n=3$, \texttt{'z'} chuyển thành \texttt{'c'}).
-    \item \textbf{Nâng cao 2:} Hỗ trợ đồng thời cả chữ in hoa (\texttt{'A'}--\texttt{'Z'}) và chữ in thường (\texttt{'a'}--\texttt{'z'}). Tất cả ký tự số, ký tự đặc biệt, khoảng trắng được giữ nguyên không đổi. Chuỗi đầu vào có độ dài tùy chọn tối đa 255 ký tự.
-\end{itemize}
-
-\textbf{Giải thích mã nguồn:}
-Sau khi đọc chuỗi văn bản (tối đa 255 ký tự) và số bước dịch $n \in [0, 9]$, chương trình duyệt con trỏ \texttt{\%edx} qua từng byte của bộ đệm để tiến hành mã hóa. Tại mỗi bước, nếu ký tự thuộc bảng chữ cái tiếng Anh, chương trình xác định mốc cơ sở (\texttt{'A'} cho chữ hoa hoặc \texttt{'a'} cho chữ thường) rồi đưa mã về khoảng giá trị $0..25$, cộng thêm $n$, và tự động xoay vòng bằng cách trừ đi 26 nếu bị tràn trước khi chuyển ngược lại mã ASCII gốc. Toàn bộ chữ số, khoảng trắng và ký tự đặc biệt được giữ nguyên vẹn mà không làm thay đổi định dạng văn bản gốc, sau đó kết quả được xuất ra màn hình qua \texttt{sys\_write}.
+\textbf{Giải thích:}
+Ta nhập chuỗi và số bước dịch $n$ (từ 0 đến 9). Chương trình duyệt qua từng ký tự: nếu là chữ in hoa hoặc chữ in thường, ta dịch đi $n$ đơn vị và kiểm tra xoay vòng bằng cách trừ đi 26 nếu vượt quá bảng chữ cái; các ký tự còn lại (số, khoảng trắng, ký tự đặc biệt) được giữ nguyên. Cuối cùng, ta xuất chuỗi đã được mã hóa ra màn hình.
 
 
 \textbf{Mã nguồn chương trình (\texttt{bai2.3.s}):}
@@ -384,13 +369,10 @@ _start:
 \end{lstlisting}
 
 % ==================== BÀI 2.4 ====================
-\subsection{Bài 2.4: Đếm số lượng bội của 10 trong khoảng [x, y]}
+\subsection{Bài 2.4}
 
-\textbf{Yêu cầu đề bài:}
-Nhập từ bàn phím hai số nguyên có 2 chữ số $x$ và $y$ ($10 \le x \le y \le 99$). Đếm số lượng các số chia hết cho 10 nằm trong đoạn đóng $[x, y]$ (tính cả $x$ và $y$).
-
-\textbf{Giải thích mã nguồn:}
-Thay vì sử dụng vòng lặp duyệt tốn kém, chương trình áp dụng công thức toán học $O(1)$ để tính số lượng bội của 10 trong đoạn đóng $[x, y]$ thông qua hiệu số $\lfloor y/10 \rfloor - \lfloor (x - 1)/10 \rfloor$. Hai chuỗi 2 chữ số $x$ và $y$ nhập từ bàn phím được chuyển đổi sang số nguyên; $x$ giảm đi 1 rồi chia 10 lấy thương lưu vào \texttt{\%edi}, còn $y$ chia 10 lấy thương lưu vào \texttt{\%esi}. Hiệu số giữa hai thương được cộng thêm \texttt{'0'} thành ký tự ASCII, đẩy trực tiếp lên đỉnh ngăn xếp (\texttt{pushl \%esi}) và tận dụng địa chỉ con trỏ đỉnh ngăn xếp \texttt{\%esp} làm bộ nhớ đệm để xuất kết quả ra màn hình mà không cần cấp phát thêm biến.
+\textbf{Giải thích:}
+Thay vì duyệt từng số từ $x$ đến $y$, ta áp dụng công thức $\lfloor y/10 \rfloor - \lfloor (x-1)/10 \rfloor$ để đếm trực tiếp số lượng bội của 10 trong đoạn $[x, y]$. Sau khi nhập hai số $x$ và $y$, chương trình tính thương số tương ứng của từng số khi chia cho 10 rồi lấy hiệu của chúng, chuyển kết quả sang mã ASCII và đẩy vào ngăn xếp để in ra màn hình.
 
 
 \textbf{Mã nguồn chương trình (\texttt{bai2.4.s}):}
@@ -489,16 +471,10 @@ _start:
 \end{lstlisting}
 
 % ==================== BÀI 2.5 ====================
-\subsection{Bài 2.5: Kiểm tra tuổi đoàn dựa vào năm sinh (Cơ bản + Nâng cao)}
+\subsection{Bài 2.5}
 
-\textbf{Yêu cầu đề bài:}
-\begin{itemize}
-    \item \textbf{Cơ bản:} Nhập năm sinh có 4 chữ số từ bàn phím. Nếu tuổi từ 16 đến 30 tuổi thì xuất thông báo \texttt{"Thuoc Doan TN"}, ngược lại xuất \texttt{"Khong thuoc Doan TN"}.
-    \item \textbf{Nâng cao:} Xuất kèm theo số tuổi cụ thể tính được (ví dụ: \texttt{"Tuoi: 21"}).
-\end{itemize}
-
-\textbf{Giải thích mã nguồn:}
-Chương trình nhận chuỗi năm sinh 4 chữ số, tính giá trị nguyên theo trọng số hàng nghìn, trăm, chục, đơn vị rồi lấy mốc năm 2026 trừ đi để xác định tuổi. Tiếp theo, lệnh \texttt{cmpl} rẽ nhánh kiểm tra: nếu tuổi nằm ngoài khoảng $[16, 30]$ thì in thông báo \texttt{"Khong thuoc Doan TN"}, ngược lại in \texttt{"Thuoc Doan TN"}. Đối với yêu cầu nâng cao, thủ tục \texttt{print} chia liên tiếp số tuổi cho 10, đẩy từng phần dư (mã ASCII) vào ngăn xếp theo cơ chế LIFO rồi lần lượt rút ra xuất ra màn hình, giúp hiển thị chính xác số tuổi nhiều chữ số theo đúng thứ tự mà không cần đảo chuỗi thủ công.
+\textbf{Giải thích:}
+Ta nhập năm sinh 4 chữ số, chuyển thành số nguyên rồi lấy mốc năm 2026 trừ đi để tính tuổi. Nếu tuổi nằm trong khoảng từ 16 đến 30 thì in ra \texttt{"Thuoc Doan TN"}, ngược lại in \texttt{"Khong thuoc Doan TN"}. Tiếp theo, ta chia liên tiếp số tuổi cho 10 rồi dùng ngăn xếp (stack) để in ra số tuổi cụ thể theo đúng thứ tự các chữ số.
 
 
 \textbf{Mã nguồn chương trình (\texttt{bai2.5.s}):}
@@ -639,16 +615,10 @@ in_loop:
 \end{lstlisting}
 
 % ==================== BÀI 2.6 ====================
-\subsection{Bài 2.6: Kiểm tra năm nhuận (Cơ bản + Nâng cao)}
+\subsection{Bài 2.6}
 
-\textbf{Yêu cầu đề bài:}
-\begin{itemize}
-    \item \textbf{Cơ bản:} Nhập một năm $a$ có 4 chữ số ($1000 \le a \le 9999$). Xuất ra \texttt{"Nam nhuan"} nếu là năm nhuận, ngược lại xuất \texttt{"Nam khong nhuan"}.
-    \item \textbf{Nâng cao:} Tìm và in ra năm nhuận kế tiếp sau năm vừa nhập.
-\end{itemize}
-
-\textbf{Giải thích mã nguồn:}
-Chương trình đọc năm 4 chữ số và kiểm tra tính nhuận theo quy tắc lịch Gregory: nếu hai chữ số cuối bằng \texttt{00} (năm tròn thế kỷ), chương trình chia cho 400; nếu khác \texttt{00}, chương trình chỉ cần chia 4 hai chữ số cuối để đưa ra kết luận \texttt{"Nam nhuan"} hoặc \texttt{"Nam khong nhuan"}. Tiếp đó, hàm \texttt{namnhuantieptheo} liên tục tăng giá trị năm lên 1 và lặp lại kiểm tra chia hết cho 4, 100 và 400 cho đến khi tìm được năm nhuận kế tiếp. Giá trị năm tìm được được chuyển đổi ngược thành chuỗi bằng cách chia 10 lấy dư và ghi lùi từ cuối bộ đệm \texttt{buffer\_num} về trước rồi xuất ra màn hình.
+\textbf{Giải thích:}
+Ta nhập năm 4 chữ số và kiểm tra năm nhuận theo lịch Gregory: nếu là năm tròn thế kỷ (kết thúc bằng \texttt{00}) thì kiểm tra chia hết cho 400; các năm còn lại chỉ cần chia hết cho 4. Sau khi in kết quả \texttt{"Nam nhuan"} hoặc \texttt{"Nam khong nhuan"}, chương trình liên tục tăng năm lên 1 và kiểm tra cho đến khi tìm được năm nhuận kế tiếp rồi in ra màn hình.
 
 
 \textbf{Mã nguồn chương trình (\texttt{bai2\_6.s}):}
