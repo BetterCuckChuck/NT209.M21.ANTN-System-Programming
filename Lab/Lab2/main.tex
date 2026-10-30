@@ -149,15 +149,9 @@
 \textbf{Yêu cầu đề bài:}
 Cho trước một chuỗi ký tự \texttt{msg} được định nghĩa trong \texttt{.section .data} (độ dài tối đa 9 ký tự). Hãy viết chương trình hợp ngữ tính độ dài chuỗi (không tính ký tự null kết thúc chuỗi \texttt{\textbackslash 0}) và in giá trị này ra màn hình kèm ký tự xuống dòng.
 
-\textbf{Phân tích giải thuật \& Kỹ thuật lập trình:}
-\begin{enumerate}
-    \item \textbf{Tính độ dài tại thời điểm hợp dịch (Assemble-time):}
-    Trong GNU Assembler, ký hiệu \texttt{.} đại diện cho con trỏ vị trí hiện tại (location counter). Sau khi khai báo chuỗi \texttt{msg: .string "IloveCR7"}, con trỏ vị trí trỏ ngay sau byte null \texttt{\textbackslash 0}. Biểu thức \texttt{msg\_len = . - msg - 1} lấy khoảng cách từ địa chỉ hiện tại trừ đi địa chỉ đầu chuỗi \texttt{msg}, rồi trừ tiếp 1 byte null để thu được đúng số ký tự thực tế ($8$ ký tự).
-    \item \textbf{Định dạng xuất dữ liệu ASCII:}
-    Hàm xuất chuỗi của hệ điều hành yêu cầu dữ liệu là các mã ASCII. Với độ dài chuỗi $L \le 9$, giá trị số $L$ được cộng thêm \texttt{0x30} (tức giá trị ASCII của ký tự \texttt{'0'}, tương đương $48$) để chuyển đổi thành ký tự chữ số. Ô nhớ \texttt{output} gồm 2 bytes được chuẩn bị sẵn: byte thứ nhất chứa mã ASCII độ dài chuỗi (\texttt{msg\_len + 0x30}), byte thứ hai chứa mã \texttt{0x0a} (ký tự xuống dòng \texttt{'\textbackslash n'}).
-    \item \textbf{Thực hiện xuất và thoát:}
-    Nạp địa chỉ \texttt{\$output} vào \texttt{\%ecx}, độ dài $2$ vào \texttt{\%edx}, \texttt{\%ebx = 1} (STDOUT), \texttt{\%eax = 4} (\texttt{sys\_write}), sau đó gọi ngắt \texttt{int \$0x80}. Tiếp theo gọi \texttt{sys\_exit} (\texttt{\%eax = 1}) để kết thúc tiến trình an toàn.
-\end{enumerate}
+\textbf{Giải thích mã nguồn:}
+Chương trình xác định trước độ dài chuỗi cố định \texttt{msg} ngay ở giai đoạn hợp dịch thông qua biểu thức \texttt{msg\_len = . - msg - 1}, lấy vị trí hiện tại trừ địa chỉ đầu chuỗi và trừ bỏ 1 byte null \texttt{\textbackslash 0}. Giá trị số này được cộng với \texttt{0x30} để chuyển đổi trực tiếp sang ký tự chữ số ASCII rồi lưu sẵn cùng mã xuống dòng \texttt{0x0a} trong vùng nhớ \texttt{output}. Khi khởi chạy, chương trình chỉ cần nạp địa chỉ buffer vào \texttt{\%ecx}, độ dài 2 bytes vào \texttt{\%edx} và gọi \texttt{sys\_write} (\texttt{\%eax = 4}) ra \texttt{stdout} (\texttt{\%ebx = 1}) qua ngắt \texttt{int \$0x80}, sau đó thoát tiến trình an toàn bằng \texttt{sys\_exit}.
+
 
 \textbf{Mã nguồn chương trình (\texttt{bai2.1.s}):}
 \begin{lstlisting}
@@ -189,21 +183,9 @@ _start:
 \textbf{Yêu cầu đề bài:}
 Nhập lần lượt 4 số nguyên có 2 chữ số ($10 \le x \le 99$) từ bàn phím. Tính tổng 4 số đã nhập và in ra màn hình số dư của tổng khi chia cho 8.
 
-\textbf{Phân tích giải thuật \& Kỹ thuật lập trình:}
-\begin{enumerate}
-    \item \textbf{Đọc và chuyển đổi chuỗi số 2 chữ số (\texttt{nhapso}):}
-    Mỗi lần người dùng nhập một số có 2 chữ số và nhấn Enter, \texttt{sys\_read} với độ dài 3 bytes (\texttt{\%edx = 3}) sẽ đọc được 2 ký tự số và 1 ký tự xuống dòng vào vùng nhớ \texttt{number1}.
-    \begin{itemize}
-        \item Ký tự hàng chục: Lệnh \texttt{movzbl number1, \%eax} đọc 1 byte mở rộng không dấu vào \texttt{\%eax}, trừ đi 48 (\texttt{subl \$48, \%eax}) để lấy giá trị chữ số, rồi nhân 10 bằng \texttt{imull \$10, \%eax}.
-        \item Ký tự hàng đơn vị: Lệnh \texttt{movzbl number1+1, \%ebx} đọc byte tiếp theo, trừ đi 48.
-        \item Tổng số vừa nhập: Cộng \texttt{\%ebx} vào \texttt{\%eax}, sau đó cộng dồn vào biến tích lũy \texttt{ans} trong bộ nhớ.
-    \end{itemize}
-    \item \textbf{Tái sử dụng hàm con:} Lệnh gọi \texttt{call nhapso} được thực thi tuần tự 4 lần trong \texttt{\_start}, giúp mã nguồn súc tích và mạch lạc.
-    \item \textbf{Phép chia lấy số dư (\texttt{inkq}):}
-    Lệnh \texttt{divl \%ecx} trong kiến trúc x86 thực hiện chia số nguyên không dấu 64-bit trong cặp thanh ghi \texttt{\%edx:\%eax} cho toán hạng 32-bit:
-    $$\text{ans} / 8 \implies \texttt{\%eax} = \lfloor \text{ans}/8 \rfloor \quad \text{và} \quad \texttt{\%edx} = \text{ans} \pmod 8$$
-    Cần xóa sạch thanh ghi \texttt{\%edx} bằng \texttt{xorl \%edx, \%edx} trước khi chia. Số dư thu được trong \texttt{\%edx} được cộng thêm 48 để tạo mã ASCII và in ra màn hình cùng thông báo \texttt{"Remainder: "}.
-\end{enumerate}
+\textbf{Giải thích mã nguồn:}
+Chương trình tách tác vụ nhập liệu thành thủ tục con \texttt{nhapso} và gọi 4 lần liên tiếp để nhận lần lượt 4 số từ người dùng qua \texttt{sys\_read}. Mỗi số đọc được gồm 2 ký tự số được chuyển đổi về giá trị nguyên bằng cách trừ 48, lấy chữ số đầu nhân 10 rồi cộng với chữ số sau trước khi cộng dồn vào biến \texttt{ans}. Sau khi hoàn tất nhập liệu, thủ tục \texttt{inkq} xóa thanh ghi \texttt{\%edx}, nạp tổng vào \texttt{\%eax} và thực hiện phép chia không dấu 64-bit cho 8 bằng lệnh \texttt{divl \%ecx}. Phần dư nằm trong \texttt{\%edx} được cộng thêm 48 thành mã ASCII và in ra màn hình cùng chuỗi thông báo qua \texttt{sys\_write}.
+
 
 \textbf{Mã nguồn chương trình (\texttt{bai2\_2.s}):}
 \begin{lstlisting}
@@ -298,25 +280,9 @@ _start:
     \item \textbf{Nâng cao 2:} Hỗ trợ đồng thời cả chữ in hoa (\texttt{'A'}--\texttt{'Z'}) và chữ in thường (\texttt{'a'}--\texttt{'z'}). Tất cả ký tự số, ký tự đặc biệt, khoảng trắng được giữ nguyên không đổi. Chuỗi đầu vào có độ dài tùy chọn tối đa 255 ký tự.
 \end{itemize}
 
-\textbf{Phân tích giải thuật \& Kỹ thuật lập trình:}
-\begin{enumerate}
-    \item \textbf{Nhận chuỗi có độ dài động:} Sử dụng vùng nhớ đệm 256 bytes trong \texttt{.bss}. Lời gọi \texttt{sys\_read} trả về số lượng byte thực tế đã đọc vào \texttt{\%eax}, giá trị này được lưu vào \texttt{input\_len} làm giới hạn duyệt chuỗi.
-    \item \textbf{Phân loại ký tự (Filtering):}
-    Duyệt con trỏ \texttt{\%edx} qua từng byte của chuỗi:
-    \begin{itemize}
-        \item Ký tự $< \text{'A'}$: Nhảy tới \texttt{.cipher\_loop} (giữ nguyên ký tự đặc biệt, số, dấu câu).
-        \item Ký tự $\le \text{'Z'}$: Là chữ in hoa, đặt mốc cơ sở \texttt{\%bl = 'A'} và nhảy tới \texttt{.shift}.
-        \item Ký tự $< \text{'a'}$: Là ký tự đặc biệt nằm giữa bảng mã ASCII (\texttt{'['}, \texttt{']'}, \dots), giữ nguyên.
-        \item Ký tự $\le \text{'z'}$: Là chữ in thường, đặt mốc cơ sở \texttt{\%bl = 'a'} và nhảy tới \texttt{.shift}.
-        \item Ký tự $> \text{'z'}$: Ký tự đặc biệt, giữ nguyên.
-    \end{itemize}
-    \item \textbf{Giải thuật dịch và xoay vòng Modulo 26:}
-    $$c_{new} = \begin{cases} 
-    (c - \text{base} + n) + \text{base} & \text{nếu } (c - \text{base} + n) < 26 \\ 
-    (c - \text{base} + n - 26) + \text{base} & \text{nếu } (c - \text{base} + n) \ge 26 
-    \end{cases}$$
-    Vì $0 \le n \le 9$, tổng $(c - \text{base} + n)$ tối đa là $25 + 9 = 34 < 52$. Do đó, chỉ cần so sánh với 26 qua lệnh \texttt{cmpb \$26, \%al}; nếu $\ge 26$ thì trừ đi 26 (\texttt{subb \$26, \%al}) là đảm bảo xoay vòng chính xác.
-\end{enumerate}
+\textbf{Giải thích mã nguồn:}
+Sau khi đọc chuỗi văn bản (tối đa 255 ký tự) và số bước dịch $n \in [0, 9]$, chương trình duyệt con trỏ \texttt{\%edx} qua từng byte của bộ đệm để tiến hành mã hóa. Tại mỗi bước, nếu ký tự thuộc bảng chữ cái tiếng Anh, chương trình xác định mốc cơ sở (\texttt{'A'} cho chữ hoa hoặc \texttt{'a'} cho chữ thường) rồi đưa mã về khoảng giá trị $0..25$, cộng thêm $n$, và tự động xoay vòng bằng cách trừ đi 26 nếu bị tràn trước khi chuyển ngược lại mã ASCII gốc. Toàn bộ chữ số, khoảng trắng và ký tự đặc biệt được giữ nguyên vẹn mà không làm thay đổi định dạng văn bản gốc, sau đó kết quả được xuất ra màn hình qua \texttt{sys\_write}.
+
 
 \textbf{Mã nguồn chương trình (\texttt{bai2.3.s}):}
 \begin{lstlisting}
@@ -423,21 +389,9 @@ _start:
 \textbf{Yêu cầu đề bài:}
 Nhập từ bàn phím hai số nguyên có 2 chữ số $x$ và $y$ ($10 \le x \le y \le 99$). Đếm số lượng các số chia hết cho 10 nằm trong đoạn đóng $[x, y]$ (tính cả $x$ và $y$).
 
-\textbf{Phân tích giải thuật \& Kỹ thuật lập trình:}
-\begin{enumerate}
-    \item \textbf{Tối ưu hóa toán học độ phức tạp $O(1)$:}
-    Thay vì sử dụng vòng lặp duyệt từng phần tử từ $x$ đến $y$, ta áp dụng nguyên lý toán học: số lượng số chia hết cho 10 trong khoảng $[1, N]$ là $\lfloor N/10 \rfloor$. Do đó, số lượng bội của 10 trong đoạn đóng $[x, y]$ được tính trực tiếp bằng:
-    $$\text{count} = \left\lfloor \frac{y}{10} \right\rfloor - \left\lfloor \frac{x-1}{10} \right\rfloor$$
-    Công thức này có độ phức tạp thời gian $O(1)$, thực hiện đúng đắn cho mọi trường hợp biên khi $x$ hoặc $y$ chính là bội của 10.
-    \item \textbf{Cài đặt trên Assembly:}
-    \begin{itemize}
-        \item Đọc chuỗi $x$, chuyển thành số nguyên: $\text{val}_x = (x[0] - '0') \times 10 + (x[1] - '0')$. Giảm đi 1 bằng lệnh \texttt{decl \%edi}, sau đó chia 10 bằng lệnh \texttt{divl \%ecx} để thu được thương số $\lfloor (x-1)/10 \rfloor$ lưu vào thanh ghi \texttt{\%edi}.
-        \item Đọc chuỗi $y$, chuyển thành số nguyên, chia 10 để thu được thương số $\lfloor y/10 \rfloor$ lưu vào thanh ghi \texttt{\%esi}.
-        \item Hiệu số \texttt{subl \%edi, \%esi} cho ra kết quả cần tìm.
-    \end{itemize}
-    \item \textbf{Xuất kết quả trực tiếp qua ngăn xếp (Stack):}
-    Cộng thêm \texttt{'0'} vào \texttt{\%esi} để chuyển sang ký tự ASCII, sau đó đẩy trực tiếp lên đỉnh ngăn xếp bằng \texttt{pushl \%esi}. Địa chỉ đỉnh ngăn xếp hiện tại (\texttt{\%esp}) được gán trực tiếp làm con trỏ buffer cho \texttt{sys\_write} (\texttt{movl \%esp, \%ecx}), không tốn ô nhớ trong \texttt{.bss}.
-\end{enumerate}
+\textbf{Giải thích mã nguồn:}
+Thay vì sử dụng vòng lặp duyệt tốn kém, chương trình áp dụng công thức toán học $O(1)$ để tính số lượng bội của 10 trong đoạn đóng $[x, y]$ thông qua hiệu số $\lfloor y/10 \rfloor - \lfloor (x - 1)/10 \rfloor$. Hai chuỗi 2 chữ số $x$ và $y$ nhập từ bàn phím được chuyển đổi sang số nguyên; $x$ giảm đi 1 rồi chia 10 lấy thương lưu vào \texttt{\%edi}, còn $y$ chia 10 lấy thương lưu vào \texttt{\%esi}. Hiệu số giữa hai thương được cộng thêm \texttt{'0'} thành ký tự ASCII, đẩy trực tiếp lên đỉnh ngăn xếp (\texttt{pushl \%esi}) và tận dụng địa chỉ con trỏ đỉnh ngăn xếp \texttt{\%esp} làm bộ nhớ đệm để xuất kết quả ra màn hình mà không cần cấp phát thêm biến.
+
 
 \textbf{Mã nguồn chương trình (\texttt{bai2.4.s}):}
 \begin{lstlisting}
@@ -543,27 +497,9 @@ _start:
     \item \textbf{Nâng cao:} Xuất kèm theo số tuổi cụ thể tính được (ví dụ: \texttt{"Tuoi: 21"}).
 \end{itemize}
 
-\textbf{Phân tích giải thuật \& Kỹ thuật lập trình:}
-\begin{enumerate}
-    \item \textbf{Chuyển đổi chuỗi 4 chữ số sang số nguyên:}
-    Chuỗi năm sinh gồm 4 ký tự được nhân theo trọng số từng hàng:
-    $$\text{nam\_sinh} = (c_0 - '0') \times 1000 + (c_1 - '0') \times 100 + (c_2 - '0') \times 10 + (c_3 - '0')$$
-    Độ tuổi được xác định so với mốc năm hiện tại $2026$:
-    $$\text{tuoi} = 2026 - \text{nam\_sinh}$$
-    \item \textbf{So sánh khoảng:}
-    So sánh giá trị \texttt{tuoi} trong \texttt{\%edi}:
-    \begin{itemize}
-        \item \texttt{cmpl \$16, \%edi}; \texttt{jl ngoai\_khoang}: Nếu tuổi $< 16$, rẽ nhánh.
-        \item \texttt{cmpl \$30, \%edi}; \texttt{jg ngoai\_khoang}: Nếu tuổi $> 30$, rẽ nhánh.
-        \item Nếu thỏa mãn $16 \le \text{tuoi} \le 30$: In chuỗi \texttt{"Thuoc Doan TN\textbackslash n"}, sau đó nhảy đến phần nâng cao.
-    \end{itemize}
-    \item \textbf{Thuật toán in số nguyên nhiều chữ số qua Ngăn xếp (Stack):}
-    Thủ tục \texttt{print} in số nguyên bất kỳ ra màn hình:
-    \begin{itemize}
-        \item \textbf{Tách chữ số (\texttt{chia\_loop}):} Lặp chia số cho 10, phần dư được chuyển thành ký tự ASCII (\texttt{addb \$'0', \%dl}) rồi đẩy vào ngăn xếp (\texttt{pushl \%edx}). Tăng biến đếm chữ số \texttt{\%esi}. Lặp lại đến khi thương số bằng 0.
-        \item \textbf{In chữ số (\texttt{in\_loop}):} Rút từng chữ số từ ngăn xếp (\texttt{popl \%eax}). Do tính chất LIFO, các chữ số được lấy ra đúng thứ tự từ hàng cao nhất đến hàng đơn vị, sau đó xuất lần lượt ra terminal.
-    \end{itemize}
-\end{enumerate}
+\textbf{Giải thích mã nguồn:}
+Chương trình nhận chuỗi năm sinh 4 chữ số, tính giá trị nguyên theo trọng số hàng nghìn, trăm, chục, đơn vị rồi lấy mốc năm 2026 trừ đi để xác định tuổi. Tiếp theo, lệnh \texttt{cmpl} rẽ nhánh kiểm tra: nếu tuổi nằm ngoài khoảng $[16, 30]$ thì in thông báo \texttt{"Khong thuoc Doan TN"}, ngược lại in \texttt{"Thuoc Doan TN"}. Đối với yêu cầu nâng cao, thủ tục \texttt{print} chia liên tiếp số tuổi cho 10, đẩy từng phần dư (mã ASCII) vào ngăn xếp theo cơ chế LIFO rồi lần lượt rút ra xuất ra màn hình, giúp hiển thị chính xác số tuổi nhiều chữ số theo đúng thứ tự mà không cần đảo chuỗi thủ công.
+
 
 \textbf{Mã nguồn chương trình (\texttt{bai2.5.s}):}
 \begin{lstlisting}
@@ -711,23 +647,9 @@ in_loop:
     \item \textbf{Nâng cao:} Tìm và in ra năm nhuận kế tiếp sau năm vừa nhập.
 \end{itemize}
 
-\textbf{Phân tích giải thuật \& Kỹ thuật lập trình:}
-\begin{enumerate}
-    \item \textbf{Quy tắc năm nhuận chuẩn lịch Gregory:}
-    Một năm là năm nhuận khi và chỉ khi:
-    $$(\text{năm} \pmod{400} == 0) \quad \lor \quad (\text{năm} \pmod 4 == 0 \ \land \ \text{năm} \pmod{100} \ne 0)$$
-    Chương trình chia thành hai nhánh kiểm tra:
-    \begin{itemize}
-        \item Nếu hai chữ số cuối cùng bằng \texttt{"00"} (năm tròn thế kỷ, chia hết cho 100): Kiểm tra chia hết cho 400. Nếu chia hết cho 400 thì là năm nhuận; ngược lại không phải.
-        \item Nếu hai chữ số cuối khác \texttt{"00"} (không chia hết cho 100): Chỉ cần kiểm tra hai chữ số cuối chia hết cho 4 hay không.
-    \end{itemize}
-    \item \textbf{Tìm năm nhuận kế tiếp (\texttt{namnhuantieptheo}):}
-    \begin{itemize}
-        \item Tăng năm lên 1 (\texttt{addl \$1, ans}).
-        \item Kiểm tra: Nếu chia hết cho 4 và không chia hết cho 100 $\implies$ là năm nhuận (\texttt{okroido}). Nếu chia hết cho 100 và chia hết cho 400 $\implies$ là năm nhuận (\texttt{okroido}). Ngược lại, lặp tiếp bước tăng năm.
-    \end{itemize}
-    \item \textbf{Kỹ thuật ghi ngược chuỗi số vào bộ đệm:} Con trỏ \texttt{\%esi} trỏ vào cuối mảng \texttt{buffer\_num + 10}, thực hiện chia 10 lấy phần dư, lưu ký tự từ phải sang trái qua lệnh \texttt{decl \%esi; movb \%dl, (\%esi)}. Độ dài chuỗi được tính bằng \texttt{buffer\_num + 10 - \%esi}, sau đó xuất ra terminal.
-\end{enumerate}
+\textbf{Giải thích mã nguồn:}
+Chương trình đọc năm 4 chữ số và kiểm tra tính nhuận theo quy tắc lịch Gregory: nếu hai chữ số cuối bằng \texttt{00} (năm tròn thế kỷ), chương trình chia cho 400; nếu khác \texttt{00}, chương trình chỉ cần chia 4 hai chữ số cuối để đưa ra kết luận \texttt{"Nam nhuan"} hoặc \texttt{"Nam khong nhuan"}. Tiếp đó, hàm \texttt{namnhuantieptheo} liên tục tăng giá trị năm lên 1 và lặp lại kiểm tra chia hết cho 4, 100 và 400 cho đến khi tìm được năm nhuận kế tiếp. Giá trị năm tìm được được chuyển đổi ngược thành chuỗi bằng cách chia 10 lấy dư và ghi lùi từ cuối bộ đệm \texttt{buffer\_num} về trước rồi xuất ra màn hình.
+
 
 \textbf{Mã nguồn chương trình (\texttt{bai2\_6.s}):}
 \begin{lstlisting}
@@ -943,9 +865,6 @@ end:
 \newpage
 % ==================== PHẦN 2 ====================
 \section{Minh chứng kết quả thực thi}
-
-Dưới đây là hình ảnh ghi nhận chi tiết quá trình biên dịch với \texttt{as --32}, liên kết với \texttt{ld -m elf\_i386} và chạy kiểm thử thực tế trên Linux Terminal cho toàn bộ 6 bài tập (bao gồm các ca kiểm thử cơ bản, nâng cao và các trường hợp biên):
-
 
 \begin{figure}[h!]
     \centering
